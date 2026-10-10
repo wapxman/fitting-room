@@ -16,230 +16,245 @@
     font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  #app{display:grid; grid-template-columns:1fr 320px; height:100%}
+  #app{display:grid; grid-template-columns:1fr 340px; height:100%}
 
   /* ---------- сцена ---------- */
-  #stage{position:relative; min-width:0; overflow:hidden; background:#7e7e7f}
-  /* Два слоя кадров друг над другом: между соседними ракурсами делаем
-     перекрёстное затухание. С восемью кадрами (шаг 45°) без него поворот
-     ощущается щелчками, а с ним — непрерывным. */
-  .layer{
-    position:absolute; inset:0; background-repeat:no-repeat;
-    background-position:center bottom; background-size:contain;
-    will-change:opacity;
-  }
-  #stage.grab{cursor:grab} #stage.grabbing{cursor:grabbing}
-  #stage canvas{position:absolute; inset:0; width:100%; height:100%}
+  #stage{position:relative; min-width:0; overflow:hidden; background:#7a7a7c}
+  /* Два слоя друг над другом: между соседними ракурсами делаем перекрёстное
+     затухание, иначе поворот ощущается щелчками. */
+  .layer{position:absolute; inset:0; background-repeat:no-repeat;
+         background-position:center bottom; background-size:contain; will-change:opacity}
+  #stage.grabbing{cursor:grabbing} #stage{cursor:grab}
 
   #top{position:absolute; left:14px; top:14px; right:14px; display:flex; gap:8px;
        flex-wrap:wrap; pointer-events:none; z-index:3}
   .chip{pointer-events:auto; background:rgba(16,18,23,.72); border:1px solid rgba(255,255,255,.14);
         color:#fff; padding:8px 13px; border-radius:999px; font-size:13px; cursor:pointer;
         backdrop-filter:blur(10px); user-select:none; white-space:nowrap}
-  .chip:hover{background:rgba(16,18,23,.88)}
+  .chip:hover{background:rgba(16,18,23,.9)}
   .chip.on{background:var(--accent); color:#0b1220; border-color:transparent; font-weight:600}
   .grow{flex:1}
 
-  #dial{position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+  #dial{position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
         display:flex; align-items:center; gap:12px; z-index:3;
         background:rgba(16,18,23,.72); border:1px solid rgba(255,255,255,.14);
         padding:9px 16px; border-radius:999px; backdrop-filter:blur(10px)}
-  #dial input{width:190px; accent-color:var(--accent)}
+  #dial input{width:180px; accent-color:var(--accent)}
   #deg{font-variant-numeric:tabular-nums; font-size:12.5px; color:#dfe5ee; min-width:42px; text-align:right}
-  #hint{position:absolute; left:50%; bottom:70px; transform:translateX(-50%); z-index:3;
-        font-size:12.5px; color:#fff; background:rgba(16,18,23,.6); padding:6px 13px;
-        border-radius:999px; pointer-events:none; backdrop-filter:blur(8px);
-        transition:opacity .4s}
-  #load{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-        background:#7e7e7f; color:#2b2b2d; z-index:4; font-size:14px}
+  #msg{position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+       z-index:4; background:rgba(16,18,23,.55); backdrop-filter:blur(3px); padding:24px}
+  #msg.on{display:flex}
+  #msg .box{max-width:340px; text-align:center; background:rgba(16,18,23,.92);
+            border:1px solid var(--line); border-radius:16px; padding:18px 20px}
+  #msg b{display:block; margin-bottom:6px; font-size:15px}
+  #msg span{color:var(--dim); font-size:13px}
 
   /* ---------- панель ---------- */
   #side{background:var(--panel); border-left:1px solid var(--line); display:flex;
         flex-direction:column; min-height:0}
-  #side header{padding:15px 16px 11px; border-bottom:1px solid var(--line)}
+  #side header{padding:14px 16px 10px; border-bottom:1px solid var(--line)}
   #side h1{margin:0 0 3px; font-size:16px}
   #side .sub{color:var(--dim); font-size:12px}
-  #list{overflow-y:auto; padding:12px; flex:1; min-height:0}
-  .sect{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:4px 2px 9px}
-  .card{display:flex; gap:11px; align-items:center; padding:8px; border-radius:12px;
-        background:var(--panel2); border:1px solid transparent; cursor:pointer; margin-bottom:9px}
-  .card:hover{border-color:#333b4a}
-  .card.on{border-color:var(--accent); background:var(--accent2)}
-  .card .th{width:46px; height:60px; border-radius:8px; flex:none; background:#6f6f71 center/cover;
-            border:1px solid rgba(255,255,255,.12)}
-  .card .nm{font-size:13.5px}
-  .card .ds{font-size:11.5px; color:var(--dim); margin-top:1px}
-  .card.wip{opacity:.5; cursor:default}
-  .card.wip:hover{border-color:transparent}
-  #side footer{padding:11px 14px; border-top:1px solid var(--line); color:var(--dim); font-size:11.5px}
+  #picks{overflow-y:auto; padding:14px; flex:1; min-height:0}
+  .row{margin-bottom:18px}
+  .lbl{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:0 2px 9px}
+  .opts{display:grid; grid-template-columns:repeat(3,1fr); gap:9px}
+  .opt{background:var(--panel2); border:1px solid transparent; border-radius:12px;
+       padding:7px; cursor:pointer; text-align:center}
+  .opt:hover{border-color:#333b4a}
+  .opt.on{border-color:var(--accent); background:var(--accent2)}
+  .opt .th{width:100%; aspect-ratio:3/4; border-radius:8px; background:#6f6f71 center/cover no-repeat;
+           margin-bottom:6px; border:1px solid rgba(255,255,255,.1)}
+  .opt .nm{font-size:11.5px; line-height:1.25}
+  #side footer{padding:10px 14px; border-top:1px solid var(--line); color:var(--dim); font-size:11.5px}
+  #bar{height:4px; background:var(--panel2); border-radius:3px; overflow:hidden; margin-top:7px}
+  #bar i{display:block; height:100%; background:var(--accent)}
 
   @media (max-width:880px){
     #app{grid-template-columns:1fr; grid-template-rows:1fr auto}
-    #side{border-left:none; border-top:1px solid var(--line); max-height:40vh}
-    #dial{bottom:12px} #dial input{width:130px} #hint{bottom:60px}
+    #side{border-left:none; border-top:1px solid var(--line); max-height:52vh}
+    #dial{bottom:10px} #dial input{width:120px}
   }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="stage" class="grab">
+  <div id="stage">
     <div class="layer" id="lA"></div>
     <div class="layer" id="lB"></div>
-    <div id="load">Загружаю кадры…</div>
     <div id="top">
       <button class="chip" id="spin">⟳ Автоповорот</button>
       <button class="chip" id="front">Анфас</button>
       <button class="chip" id="prof">Профиль</button>
       <button class="chip" id="back">Со спины</button>
       <span class="grow"></span>
+      <button class="chip" id="rnd">Случайный образ</button>
       <button class="chip" id="shot">Снимок</button>
     </div>
-    <div id="hint">Тяните влево-вправо — поворот на 360°</div>
     <div id="dial">
       <input type="range" id="rng" min="0" max="359" value="0" step="1">
       <span id="deg">0°</span>
     </div>
+    <div id="msg"><div class="box"><b id="msgT"></b><span id="msgS"></span></div></div>
   </div>
 
   <aside id="side">
     <header>
       <h1>Примерочная</h1>
-      <div class="sub">Настоящие кадры, не манекен</div>
+      <div class="sub" id="sub">Выберите верх, низ и обувь — комбинируется свободно</div>
     </header>
-    <div id="list"></div>
-    <footer id="foot"></footer>
+    <div id="picks"></div>
+    <footer>
+      <div id="foot"></div>
+      <div id="bar"><i style="width:0"></i></div>
+    </footer>
   </aside>
 </div>
 
 <script>
-const stage = document.getElementById('stage');
-const lA = document.getElementById('lA'), lB = document.getElementById('lB');
-const rng = document.getElementById('rng'), degEl = document.getElementById('deg');
-const listEl = document.getElementById('list'), footEl = document.getElementById('foot');
+const $ = s => document.querySelector(s);
+const stage=$('#stage'), lA=$('#lA'), lB=$('#lB'), rng=$('#rng'), degEl=$('#deg');
+const picksEl=$('#picks'), footEl=$('#foot'), msg=$('#msg');
 
-let DATA = null, outfit = null, angle = 0, spinning = false, dragging = false;
+let D=null, sel={top:null,bottom:null,shoes:null}, angle=0, spinning=false, dragging=false;
 
-// Кадры лежат по углам. Их может быть НЕ полный круг (генерация идёт пачками),
-// поэтому вьюер работает с тем, что реально есть: ищет ближайшие снятые углы
-// слева и справа и смешивает их. Так один готовый ракурс уже крутится, а
-// каждый новый кадр просто делает оборот плавнее — переписывать ничего не надо.
-function nearest(frames, a){
-  const keys = Object.keys(frames).map(Number).sort((x,y)=>x-y);
+const cid = (s=sel) => `${s.top}-${s.bottom}-${s.shoes}`;
+const framesOf = id => (D && D.combos[id]) || {};
+
+/* Кадры могут покрывать НЕполный круг: у исходного сочетания их восемь, у
+   остальных четыре. Поэтому ищем ближайшие снятые углы слева и справа и
+   смешиваем — один и тот же код работает и для 4, и для 8, и для 24 ракурсов. */
+function nearest(fr, a){
+  const keys = Object.keys(fr).map(Number).sort((x,y)=>x-y);
   if (!keys.length) return null;
   if (keys.length === 1) return {lo:keys[0], hi:keys[0], t:0};
-  let lo = keys[keys.length-1], hi = keys[0];
-  for (let i=0;i<keys.length;i++){
-    if (keys[i] <= a) lo = keys[i];
-  }
-  for (let i=keys.length-1;i>=0;i--){
-    if (keys[i] >= a) hi = keys[i];
-  }
-  if (lo === hi) return {lo, hi, t:0};
-  let span = hi - lo; if (span < 0) span += 360;
-  let off = a - lo;   if (off < 0) off += 360;
+  let lo=keys[keys.length-1], hi=keys[0];
+  for (const k of keys) if (k <= a) lo = k;
+  for (let i=keys.length-1;i>=0;i--) if (keys[i] >= a) hi = keys[i];
+  if (lo === hi) return {lo,hi,t:0};
+  let span = hi-lo; if (span < 0) span += 360;
+  let off = a-lo;   if (off < 0) off += 360;
   return {lo, hi, t: span ? off/span : 0};
 }
 
 function render(){
-  if (!outfit) return;
-  const n = nearest(outfit.frames, ((angle%360)+360)%360);
-  if (!n) return;
-  lA.style.backgroundImage = `url("${outfit.frames[n.lo]}")`;
-  lB.style.backgroundImage = `url("${outfit.frames[n.hi]}")`;
+  const fr = framesOf(cid());
+  const n = nearest(fr, angle);
+  degEl.textContent = Math.round(angle)+'°';
+  rng.value = Math.round(angle);
+  if (!n){
+    // Сочетание ещё не снято — честно говорим об этом, а не показываем чужое.
+    msg.classList.add('on');
+    $('#msgT').textContent = 'Этот комплект ещё снимается';
+    $('#msgS').textContent = `Готово ${D.ready} из ${D.total}. Выберите другое сочетание — или вернитесь позже, кадры доснимаются.`;
+    lA.style.backgroundImage = lB.style.backgroundImage = 'none';
+    return;
+  }
+  msg.classList.remove('on');
+  lA.style.backgroundImage = `url("${fr[n.lo]}")`;
+  lB.style.backgroundImage = `url("${fr[n.hi]}")`;
   lB.style.opacity = n.t;
-  lA.style.opacity = 1;
-  degEl.textContent = Math.round(((angle%360)+360)%360) + '°';
-  rng.value = Math.round(((angle%360)+360)%360);
 }
+const setAngle = a => { angle = ((a%360)+360)%360; render(); };
 
-function setAngle(a){ angle = ((a%360)+360)%360; render(); }
+/* ---- поворот перетаскиванием ---- */
+let px=0, vel=0;
+stage.addEventListener('pointerdown', e=>{
+  stage.setPointerCapture(e.pointerId); dragging=true; px=e.clientX; vel=0;
+  spinning=false; $('#spin').classList.remove('on'); stage.classList.add('grabbing');
+});
+stage.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx=e.clientX-px; px=e.clientX;
+  vel = dx * (360/Math.max(320, stage.clientWidth*0.9));
+  setAngle(angle+vel);
+});
+for (const ev of ['pointerup','pointercancel'])
+  stage.addEventListener(ev, ()=>{ dragging=false; stage.classList.remove('grabbing'); });
+rng.addEventListener('input', ()=>{ spinning=false; $('#spin').classList.remove('on'); setAngle(+rng.value); });
 
-// --- перетаскивание: горизонталь -> угол ---
-let px = 0, vel = 0, last = 0;
-function down(x){ dragging = true; px = x; vel = 0; spinning = false; spinBtn.classList.remove('on');
-                  stage.classList.add('grabbing'); hideHint(); }
-function move(x){
-  if (!dragging) return;
-  const dx = x - px; px = x;
-  const k = 360 / Math.max(320, stage.clientWidth * 0.9);  // полный оборот ≈ ширина сцены
-  vel = dx * k; setAngle(angle + vel);
-}
-function up(){ dragging = false; stage.classList.remove('grabbing'); last = performance.now(); }
-
-stage.addEventListener('pointerdown', e=>{ stage.setPointerCapture(e.pointerId); down(e.clientX); });
-stage.addEventListener('pointermove', e=> move(e.clientX));
-stage.addEventListener('pointerup',   up);
-stage.addEventListener('pointercancel', up);
-rng.addEventListener('input', ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(+rng.value); });
-
-let hintTimer = setTimeout(hideHint, 6000);
-function hideHint(){ const h=document.getElementById('hint'); if(h) h.style.opacity=0; }
-
-const spinBtn = document.getElementById('spin');
-spinBtn.onclick = ()=>{ spinning = !spinning; spinBtn.classList.toggle('on', spinning); };
-document.getElementById('front').onclick = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(0); };
-document.getElementById('prof').onclick  = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(90); };
-document.getElementById('back').onclick  = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(180); };
-document.getElementById('shot').onclick = ()=>{
-  const n = nearest(outfit.frames, angle);
-  const a = document.createElement('a');
-  a.href = outfit.frames[n.t > 0.5 ? n.hi : n.lo];
-  a.download = `${outfit.id}_${Math.round(angle)}.png`;
-  a.click();
+$('#spin').onclick = e=>{ spinning=!spinning; e.target.classList.toggle('on', spinning); };
+$('#front').onclick= ()=>{ spinning=false; $('#spin').classList.remove('on'); setAngle(0); };
+$('#prof').onclick = ()=>{ spinning=false; $('#spin').classList.remove('on'); setAngle(90); };
+$('#back').onclick = ()=>{ spinning=false; $('#spin').classList.remove('on'); setAngle(180); };
+$('#shot').onclick = ()=>{
+  const fr=framesOf(cid()), n=nearest(fr, angle); if(!n) return;
+  const a=document.createElement('a');
+  a.href = fr[n.t>0.5?n.hi:n.lo]; a.download = cid()+'_'+Math.round(angle)+'.png'; a.click();
+};
+$('#rnd').onclick = ()=>{
+  // Случайный образ выбираем ТОЛЬКО из снятых, иначе кнопка чаще всего вела бы
+  // в заглушку «ещё снимается».
+  const ready = Object.keys(D.combos).filter(k=>Object.keys(D.combos[k]).length);
+  if(!ready.length) return;
+  const [t,b,s] = ready[Math.floor(Math.random()*ready.length)].split('-');
+  sel = {top:t, bottom:b, shoes:s}; drawPicks(); render();
 };
 
-function loop(ts){
+(function loop(){
   requestAnimationFrame(loop);
-  if (spinning && !dragging) setAngle(angle + 0.45);
-  else if (!dragging && Math.abs(vel) > 0.05){      // инерция после броска
-    vel *= 0.94; setAngle(angle + vel);
+  if (spinning && !dragging) setAngle(angle+0.4);
+  else if (!dragging && Math.abs(vel) > 0.05){ vel *= 0.94; setAngle(angle+vel); }
+})();
+
+/* ---- выбор одежды ---- */
+const RU = {top:'Верх', bottom:'Низ', shoes:'Обувь'};
+
+/** Превью для варианта: кадр того сочетания, что получится при его выборе.
+ *  Если оно ещё не снято — берём любое снятое с этой вещью, чтобы вещь было
+ *  видно, а не серый квадрат. */
+function thumbFor(slot, id){
+  const probe = {...sel, [slot]: id};
+  const direct = framesOf(cid(probe));
+  if (direct[0]) return direct[0];
+  for (const [k, fr] of Object.entries(D.combos)){
+    const parts = k.split('-');
+    const idx = {top:0, bottom:1, shoes:2}[slot];
+    if (parts[idx] === id && fr[0]) return fr[0];
+  }
+  return null;
+}
+
+function drawPicks(){
+  picksEl.innerHTML = '';
+  for (const slot of ['top','bottom','shoes']){
+    const row = document.createElement('div'); row.className='row';
+    const lbl = document.createElement('div'); lbl.className='lbl'; lbl.textContent=RU[slot];
+    const opts = document.createElement('div'); opts.className='opts';
+    for (const it of D.items[slot]){
+      const o = document.createElement('div');
+      o.className = 'opt' + (sel[slot]===it.id ? ' on':'');
+      const th = document.createElement('div'); th.className='th';
+      const u = thumbFor(slot, it.id);
+      if (u) th.style.backgroundImage = `url("${u}")`;
+      const nm = document.createElement('div'); nm.className='nm'; nm.textContent=it.name;
+      o.append(th, nm);
+      o.onclick = ()=>{ sel[slot]=it.id; drawPicks(); render(); preload(); };
+      opts.appendChild(o);
+    }
+    row.append(lbl, opts); picksEl.appendChild(row);
   }
 }
-requestAnimationFrame(loop);
 
-// --- каталог ---
-function pick(o){
-  if (!o.ready) return;
-  outfit = o;
-  // Предзагрузка: без неё первый оборот «мигает» белым на каждом новом кадре.
-  for (const u of Object.values(o.frames)) { const i = new Image(); i.src = u; }
-  render(); draw();
+function preload(){
+  for (const u of Object.values(framesOf(cid()))) { const i=new Image(); i.src=u; }
 }
 
-function draw(){
-  listEl.innerHTML = '';
-  const s = document.createElement('div'); s.className='sect'; s.textContent='Образы';
-  listEl.appendChild(s);
-  for (const o of DATA.outfits){
-    const d = document.createElement('div');
-    d.className = 'card' + (outfit && outfit.id===o.id ? ' on':'') + (o.ready?'':' wip');
-    const th = document.createElement('div'); th.className='th';
-    const first = Object.values(o.frames)[0];
-    if (first) th.style.backgroundImage = `url("${first}")`;
-    const tx = document.createElement('div');
-    const cnt = Object.keys(o.frames).length;
-    tx.innerHTML = `<div class="nm">${o.name}</div><div class="ds">${
-      o.ready ? o.desc + ' · ' + cnt + ' ракурс(ов)' : 'готовлю…'}</div>`;
-    d.append(th, tx);
-    d.onclick = ()=>pick(o);
-    listEl.appendChild(d);
-  }
-}
-
-fetch('assets/outfits.json?v=' + Date.now())
-  .then(r=>r.json())
-  .then(j=>{
-    DATA = j;
-    footEl.textContent = j.note || '';
-    // Серый сцены берём ИЗ КАДРОВ: иначе по бокам видно шов между подложкой
-    // страницы и подложкой снимка — два почти одинаковых, но разных серых.
-    if (j.bg) document.getElementById('stage').style.background = j.bg;
-    const ready = j.outfits.filter(o=>o.ready);
-    if (!ready.length){ document.getElementById('load').textContent = 'Кадры ещё готовятся'; return; }
-    pick(ready[0]);
-    document.getElementById('load').remove();
-  })
-  .catch(()=>{ document.getElementById('load').textContent = 'Не удалось загрузить каталог'; });
+fetch('assets/outfits.json?v='+Date.now()).then(r=>r.json()).then(j=>{
+  D = j;
+  if (j.bg) stage.style.background = j.bg;
+  footEl.textContent = j.note || '';
+  $('#bar i').style.width = Math.round(100*j.ready/j.total)+'%';
+  // Стартуем с готового сочетания, чтобы первый экран не был заглушкой.
+  const first = Object.keys(j.combos).find(k=>Object.keys(j.combos[k]).length) || Object.keys(j.combos)[0];
+  const [t,b,s] = first.split('-');
+  sel = {top:t, bottom:b, shoes:s};
+  drawPicks(); render(); preload();
+}).catch(()=>{
+  msg.classList.add('on');
+  $('#msgT').textContent='Не удалось загрузить каталог';
+  $('#msgS').textContent='Обновите страницу.';
+});
 </script>
 </body>
 </html>

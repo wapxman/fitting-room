@@ -69,7 +69,15 @@ def bbox(a, T=20.0):
     return int(ci[0]), int(ri[0]), int(ci[-1]), int(ri[-1]), float(rowfrac.mean()), T
 
 
-files = sorted(f for f in os.listdir(SRC) if f.lower().endswith(".png"))
+# Кадры лежат по подкаталогам сочетаний (frames/<сочетание>/aNNN.png), поэтому
+# обходим дерево и сохраняем относительный путь — иначе кадры разных комплектов
+# перезаписали бы друг друга, ведь имена ракурсов у всех одинаковые.
+files = []
+for d, _, fs in os.walk(SRC):
+    for f in fs:
+        if f.lower().endswith(".png"):
+            files.append(os.path.relpath(os.path.join(d, f), SRC).replace("\\", "/"))
+files.sort()
 if not files:
     print("кадров нет")
     sys.exit(1)
@@ -106,6 +114,8 @@ for f, (im, (x0, y0, x1, y1)) in found.items():
     canvas = Image.new("RGB", (OUT_W, OUT_H), grey)
     canvas.paste(big, (round(OUT_W / 2 - (x0 + x1) / 2 * k),
                        round(OUT_H * BASELINE - y1 * k)))
-    canvas.save(os.path.join(DST, f))
+    dst_path = os.path.join(DST, f)
+    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+    canvas.save(dst_path)
 
 print(f"\nвыровнено: {len(found)} кадр(ов) в {DST}")

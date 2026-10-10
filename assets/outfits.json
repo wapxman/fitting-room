@@ -1,22 +1,90 @@
 {
- "note": "Кадры сняты по вашему фото и выровнены по росту и линии пола.",
- "outfits": [
-  {
-   "id": "tee-jeans",
-   "name": "Футболка и джинсы",
-   "desc": "белая футболка, тёмные джинсы, белые кеды",
-   "frames": {
-    "0": "frames_aligned/a000.png",
-    "45": "frames_aligned/a045.png",
-    "90": "frames_aligned/a090.png",
-    "135": "frames_aligned/a135.png",
-    "180": "frames_aligned/a180.png",
-    "225": "frames_aligned/a225.png",
-    "270": "frames_aligned/a270.png",
-    "315": "frames_aligned/a315.png"
+ "items": {
+  "top": [
+   {
+    "id": "tee",
+    "name": "Белая футболка"
    },
-   "ready": true
-  }
- ],
+   {
+    "id": "hoodie",
+    "name": "Чёрное худи"
+   },
+   {
+    "id": "shirt",
+    "name": "Синяя рубашка"
+   }
+  ],
+  "bottom": [
+   {
+    "id": "jeans",
+    "name": "Тёмные джинсы"
+   },
+   {
+    "id": "chino",
+    "name": "Бежевые чиносы"
+   },
+   {
+    "id": "jogger",
+    "name": "Серые джоггеры"
+   }
+  ],
+  "shoes": [
+   {
+    "id": "sneak",
+    "name": "Белые кеды"
+   },
+   {
+    "id": "boot",
+    "name": "Коричневые ботинки"
+   },
+   {
+    "id": "black",
+    "name": "Чёрные кроссовки"
+   }
+  ]
+ },
+ "combos": {
+  "tee-jeans-sneak": {
+   "0": "frames_aligned/tee-jeans-sneak/a000.png",
+   "45": "frames_aligned/tee-jeans-sneak/a045.png",
+   "90": "frames_aligned/tee-jeans-sneak/a090.png",
+   "135": "frames_aligned/tee-jeans-sneak/a135.png",
+   "180": "frames_aligned/tee-jeans-sneak/a180.png",
+   "225": "frames_aligned/tee-jeans-sneak/a225.png",
+   "270": "frames_aligned/tee-jeans-sneak/a270.png",
+   "315": "frames_aligned/tee-jeans-sneak/a315.png"
+  },
+  "tee-jeans-boot": {
+   "0": "frames_aligned/tee-jeans-boot/a000.png"
+  },
+  "tee-jeans-black": {},
+  "tee-chino-sneak": {},
+  "tee-chino-boot": {},
+  "tee-chino-black": {},
+  "tee-jogger-sneak": {},
+  "tee-jogger-boot": {},
+  "tee-jogger-black": {},
+  "hoodie-jeans-sneak": {},
+  "hoodie-jeans-boot": {},
+  "hoodie-jeans-black": {},
+  "hoodie-chino-sneak": {},
+  "hoodie-chino-boot": {},
+  "hoodie-chino-black": {},
+  "hoodie-jogger-sneak": {},
+  "hoodie-jogger-boot": {},
+  "hoodie-jogger-black": {},
+  "shirt-jeans-sneak": {},
+  "shirt-jeans-boot": {},
+  "shirt-jeans-black": {},
+  "shirt-chino-sneak": {},
+  "shirt-chino-boot": {},
+  "shirt-chino-black": {},
+  "shirt-jogger-sneak": {},
+  "shirt-jogger-boot": {},
+  "shirt-jogger-black": {}
+ },
+ "total": 27,
+ "ready": 2,
+ "note": "Готово сочетаний: 2 из 27.",
  "bg": "rgb(121,120,122)"
 }
