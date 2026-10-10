@@ -69,9 +69,15 @@
   "tee-chino-sneak": {
    "0": "frames_aligned/tee-chino-sneak/a000.png",
    "90": "frames_aligned/tee-chino-sneak/a090.png",
-   "180": "frames_aligned/tee-chino-sneak/a180.png"
+   "180": "frames_aligned/tee-chino-sneak/a180.png",
+   "270": "frames_aligned/tee-chino-sneak/a270.png"
   },
-  "tee-chino-boot": {},
+  "tee-chino-boot": {
+   "0": "frames_aligned/tee-chino-boot/a000.png",
+   "90": "frames_aligned/tee-chino-boot/a090.png",
+   "180": "frames_aligned/tee-chino-boot/a180.png",
+   "270": "frames_aligned/tee-chino-boot/a270.png"
+  },
   "tee-chino-black": {},
   "tee-jogger-sneak": {},
   "tee-jogger-boot": {},
@@ -96,7 +102,7 @@
   "shirt-jogger-black": {}
  },
  "total": 27,
- "ready": 4,
- "note": "Готово сочетаний: 4 из 27.",
+ "ready": 5,
+ "note": "Готово сочетаний: 5 из 27.",
  "bg": "rgb(121,120,122)"
 }
