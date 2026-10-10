@@ -56,9 +56,14 @@
   },
   "tee-jeans-boot": {
    "0": "frames_aligned/tee-jeans-boot/a000.png",
-   "90": "frames_aligned/tee-jeans-boot/a090.png"
+   "90": "frames_aligned/tee-jeans-boot/a090.png",
+   "180": "frames_aligned/tee-jeans-boot/a180.png",
+   "270": "frames_aligned/tee-jeans-boot/a270.png"
   },
-  "tee-jeans-black": {},
+  "tee-jeans-black": {
+   "0": "frames_aligned/tee-jeans-black/a000.png",
+   "90": "frames_aligned/tee-jeans-black/a090.png"
+  },
   "tee-chino-sneak": {},
   "tee-chino-boot": {},
   "tee-chino-black": {},
@@ -85,7 +90,7 @@
   "shirt-jogger-black": {}
  },
  "total": 27,
- "ready": 2,
- "note": "Готово сочетаний: 2 из 27.",
+ "ready": 3,
+ "note": "Готово сочетаний: 3 из 27.",
  "bg": "rgb(121,120,122)"
 }
