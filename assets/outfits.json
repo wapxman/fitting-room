@@ -55,7 +55,8 @@
    "315": "frames_aligned/tee-jeans-sneak/a315.png"
   },
   "tee-jeans-boot": {
-   "0": "frames_aligned/tee-jeans-boot/a000.png"
+   "0": "frames_aligned/tee-jeans-boot/a000.png",
+   "90": "frames_aligned/tee-jeans-boot/a090.png"
   },
   "tee-jeans-black": {},
   "tee-chino-sneak": {},
