@@ -82,6 +82,16 @@ if not files:
     print("кадров нет")
     sys.exit(1)
 
+# Уже выровненные пропускаем: скрипт зовётся по расписанию каждые 20 минут,
+# и перемалывать всю матрицу заново на каждом прогоне незачем.
+SKIP_DONE = "--all" not in sys.argv
+files = [f for f in files
+         if not (SKIP_DONE and os.path.exists(os.path.join(DST, f))
+                 and os.path.getmtime(os.path.join(DST, f)) >= os.path.getmtime(os.path.join(SRC, f)))]
+if not files:
+    print("новых кадров нет")
+    sys.exit(0)
+
 found, greys = {}, []
 for f in files:
     im = Image.open(os.path.join(SRC, f)).convert("RGB")
