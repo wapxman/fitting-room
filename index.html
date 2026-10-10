@@ -3,564 +3,243 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Примерочная · 3D</title>
+<title>Примерочная</title>
 <style>
   :root{
-    --bg:#0e1014; --panel:#15181f; --panel2:#1b1f28; --line:#262b36;
-    --ink:#eef1f6; --dim:#97a0b0; --accent:#6ea8fe; --accent2:#2b3a55;
-    --r:14px;
+    --bg:#0f1115; --panel:#15181f; --panel2:#1b1f28; --line:#262b36;
+    --ink:#eef1f6; --dim:#98a1b1; --accent:#6ea8fe; --accent2:#2b3a55;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   body{
-    background:var(--bg); color:var(--ink);
+    background:var(--bg); color:var(--ink); overflow:hidden;
     font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
-    overflow:hidden; -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased;
   }
-  #app{display:grid; grid-template-columns:1fr 330px; height:100%}
-  #stage{position:relative; min-width:0}
-  canvas{display:block; width:100%; height:100%; touch-action:none}
+  #app{display:grid; grid-template-columns:1fr 320px; height:100%}
 
-  /* ---- верхняя панель над сценой ---- */
-  #top{
-    position:absolute; left:14px; top:14px; right:14px; display:flex; gap:8px;
-    align-items:center; pointer-events:none; flex-wrap:wrap;
+  /* ---------- сцена ---------- */
+  #stage{position:relative; min-width:0; overflow:hidden; background:#7e7e7f}
+  /* Два слоя кадров друг над другом: между соседними ракурсами делаем
+     перекрёстное затухание. С восемью кадрами (шаг 45°) без него поворот
+     ощущается щелчками, а с ним — непрерывным. */
+  .layer{
+    position:absolute; inset:0; background-repeat:no-repeat;
+    background-position:center bottom; background-size:contain;
+    will-change:opacity;
   }
-  .chip{
-    pointer-events:auto; background:rgba(21,24,31,.82); border:1px solid var(--line);
-    color:var(--ink); padding:8px 12px; border-radius:999px; font-size:13px;
-    cursor:pointer; backdrop-filter:blur(8px); user-select:none; white-space:nowrap;
-  }
-  .chip:hover{border-color:#3a4252}
+  #stage.grab{cursor:grab} #stage.grabbing{cursor:grabbing}
+  #stage canvas{position:absolute; inset:0; width:100%; height:100%}
+
+  #top{position:absolute; left:14px; top:14px; right:14px; display:flex; gap:8px;
+       flex-wrap:wrap; pointer-events:none; z-index:3}
+  .chip{pointer-events:auto; background:rgba(16,18,23,.72); border:1px solid rgba(255,255,255,.14);
+        color:#fff; padding:8px 13px; border-radius:999px; font-size:13px; cursor:pointer;
+        backdrop-filter:blur(10px); user-select:none; white-space:nowrap}
+  .chip:hover{background:rgba(16,18,23,.88)}
   .chip.on{background:var(--accent); color:#0b1220; border-color:transparent; font-weight:600}
   .grow{flex:1}
-  #hint{
-    position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
-    color:var(--dim); font-size:12.5px; background:rgba(21,24,31,.75);
-    padding:7px 14px; border-radius:999px; border:1px solid var(--line);
-    pointer-events:none; backdrop-filter:blur(8px); text-align:center;
-  }
 
-  /* ---- правая панель с одеждой ---- */
-  #side{
-    background:var(--panel); border-left:1px solid var(--line);
-    display:flex; flex-direction:column; min-height:0;
-  }
-  #side header{padding:16px 16px 10px; border-bottom:1px solid var(--line)}
-  #side h1{margin:0 0 3px; font-size:16px; letter-spacing:.2px}
+  #dial{position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+        display:flex; align-items:center; gap:12px; z-index:3;
+        background:rgba(16,18,23,.72); border:1px solid rgba(255,255,255,.14);
+        padding:9px 16px; border-radius:999px; backdrop-filter:blur(10px)}
+  #dial input{width:190px; accent-color:var(--accent)}
+  #deg{font-variant-numeric:tabular-nums; font-size:12.5px; color:#dfe5ee; min-width:42px; text-align:right}
+  #hint{position:absolute; left:50%; bottom:70px; transform:translateX(-50%); z-index:3;
+        font-size:12.5px; color:#fff; background:rgba(16,18,23,.6); padding:6px 13px;
+        border-radius:999px; pointer-events:none; backdrop-filter:blur(8px);
+        transition:opacity .4s}
+  #load{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+        background:#7e7e7f; color:#2b2b2d; z-index:4; font-size:14px}
+
+  /* ---------- панель ---------- */
+  #side{background:var(--panel); border-left:1px solid var(--line); display:flex;
+        flex-direction:column; min-height:0}
+  #side header{padding:15px 16px 11px; border-bottom:1px solid var(--line)}
+  #side h1{margin:0 0 3px; font-size:16px}
   #side .sub{color:var(--dim); font-size:12px}
-  #tabs{display:flex; gap:6px; padding:10px 12px; border-bottom:1px solid var(--line); flex-wrap:wrap}
-  .tab{
-    flex:1 1 auto; text-align:center; padding:7px 4px; border-radius:9px; font-size:12.5px;
-    background:var(--panel2); border:1px solid transparent; cursor:pointer; color:var(--dim);
-  }
-  .tab.on{color:var(--ink); border-color:var(--accent); background:var(--accent2)}
-  #list{overflow-y:auto; padding:12px; flex:1; min-height:0; scrollbar-width:thin}
-  .card{
-    display:flex; gap:11px; align-items:center; padding:9px; border-radius:11px;
-    background:var(--panel2); border:1px solid transparent; cursor:pointer; margin-bottom:8px;
-  }
+  #list{overflow-y:auto; padding:12px; flex:1; min-height:0}
+  .sect{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:4px 2px 9px}
+  .card{display:flex; gap:11px; align-items:center; padding:8px; border-radius:12px;
+        background:var(--panel2); border:1px solid transparent; cursor:pointer; margin-bottom:9px}
   .card:hover{border-color:#333b4a}
   .card.on{border-color:var(--accent); background:var(--accent2)}
-  .sw{width:36px; height:36px; border-radius:9px; flex:none; border:1px solid rgba(255,255,255,.14)}
+  .card .th{width:46px; height:60px; border-radius:8px; flex:none; background:#6f6f71 center/cover;
+            border:1px solid rgba(255,255,255,.12)}
   .card .nm{font-size:13.5px}
-  .card .ds{font-size:11.5px; color:var(--dim)}
-  .sect{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:14px 2px 8px}
-  .sect:first-child{margin-top:2px}
-  #colors{display:grid; grid-template-columns:repeat(8,1fr); gap:7px; padding:0 2px}
-  .col{aspect-ratio:1; border-radius:7px; cursor:pointer; border:2px solid transparent}
-  .col.on{border-color:#fff}
+  .card .ds{font-size:11.5px; color:var(--dim); margin-top:1px}
+  .card.wip{opacity:.5; cursor:default}
+  .card.wip:hover{border-color:transparent}
   #side footer{padding:11px 14px; border-top:1px solid var(--line); color:var(--dim); font-size:11.5px}
-  #ref{width:100%; border-radius:10px; display:block; margin-top:8px; border:1px solid var(--line)}
 
-  #drop{
-    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
-    background:rgba(14,16,20,.86); border:2px dashed var(--accent); z-index:9; font-size:15px;
-  }
-  #drop.on{display:flex}
-  #load{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    color:var(--dim); font-size:14px; z-index:5;
-  }
   @media (max-width:880px){
     #app{grid-template-columns:1fr; grid-template-rows:1fr auto}
-    #side{border-left:none; border-top:1px solid var(--line); max-height:46vh}
-    #ref{display:none}
+    #side{border-left:none; border-top:1px solid var(--line); max-height:40vh}
+    #dial{bottom:12px} #dial input{width:130px} #hint{bottom:60px}
   }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="stage">
-    <div id="load">Собираю фигуру…</div>
+  <div id="stage" class="grab">
+    <div class="layer" id="lA"></div>
+    <div class="layer" id="lB"></div>
+    <div id="load">Загружаю кадры…</div>
     <div id="top">
       <button class="chip" id="spin">⟳ Автоповорот</button>
       <button class="chip" id="front">Анфас</button>
-      <button class="chip" id="side90">Профиль</button>
+      <button class="chip" id="prof">Профиль</button>
       <button class="chip" id="back">Со спины</button>
       <span class="grow"></span>
-      <button class="chip" id="bgBtn">Фон</button>
       <button class="chip" id="shot">Снимок</button>
     </div>
-    <div id="hint">Тяните мышью или пальцем — поворот на 360°. Колесо — приблизить.</div>
-    <div id="drop">Отпустите .glb — загружу вашу 3D-модель</div>
+    <div id="hint">Тяните влево-вправо — поворот на 360°</div>
+    <div id="dial">
+      <input type="range" id="rng" min="0" max="359" value="0" step="1">
+      <span id="deg">0°</span>
+    </div>
   </div>
 
   <aside id="side">
     <header>
       <h1>Примерочная</h1>
-      <div class="sub">Фигура построена по пропорциям с вашего кадра</div>
+      <div class="sub">Настоящие кадры, не манекен</div>
     </header>
-    <div id="tabs">
-      <div class="tab on" data-c="top">Верх</div>
-      <div class="tab" data-c="bottom">Низ</div>
-      <div class="tab" data-c="shoes">Обувь</div>
-      <div class="tab" data-c="outer">Верхняя</div>
-    </div>
     <div id="list"></div>
-    <footer>
-      <div>Перетащите сюда <b>.glb</b> — покажу вашу настоящую 3D-модель.</div>
-      <img id="ref" alt="исходный кадр" onerror="this.style.display='none'">
-    </footer>
+    <footer id="foot"></footer>
   </aside>
 </div>
 
-<script type="importmap">
-{"imports":{
-  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
-  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
-}}
-</script>
-
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { M, limb, cap, smooth, torsoProfile, armProfile, legProfile } from './js/body.js';
-
-const H = M.heightM;
-const L = M.level;
-const yOf = (frac) => H * (1 - frac);   // доля от макушки -> высота от пола
-
-// ---------- сцена ----------
+<script>
 const stage = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-stage.appendChild(renderer.domElement);
+const lA = document.getElementById('lA'), lB = document.getElementById('lB');
+const rng = document.getElementById('rng'), degEl = document.getElementById('deg');
+const listEl = document.getElementById('list'), footEl = document.getElementById('foot');
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
-camera.position.set(0, H * 0.55, 4.1);
+let DATA = null, outfit = null, angle = 0, spinning = false, dragging = false;
 
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
-const BACKDROPS = [
-  { name:'студия',  a:'#20242e', b:'#0c0e12', floor:0x1a1e26 },
-  { name:'светлая', a:'#e9ecf2', b:'#bcc3cf', floor:0xd5dae2 },
-  { name:'тёплая',  a:'#2a2119', b:'#120d09', floor:0x241b14 },
-];
-let bgIdx = 0;
-function applyBackdrop(){
-  const b = BACKDROPS[bgIdx];
-  const c = document.createElement('canvas'); c.width = 2; c.height = 256;
-  const g = c.getContext('2d').createLinearGradient(0,0,0,256);
-  g.addColorStop(0,b.a); g.addColorStop(1,b.b);
-  const ctx = c.getContext('2d'); ctx.fillStyle = g; ctx.fillRect(0,0,2,256);
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = tex;
-  floor.material.color.setHex(b.floor);
-}
-
-// пол + мягкая тень
-const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(3.2, 64).rotateX(-Math.PI/2),
-  new THREE.MeshStandardMaterial({ color:0x1a1e26, roughness:.96, metalness:0 })
-);
-floor.receiveShadow = true; scene.add(floor);
-
-const key = new THREE.DirectionalLight(0xffffff, 2.3);
-key.position.set(2.4, 3.6, 2.8); key.castShadow = true;
-key.shadow.mapSize.set(2048,2048);
-key.shadow.camera.near = 0.5; key.shadow.camera.far = 12;
-key.shadow.camera.left = -2; key.shadow.camera.right = 2;
-key.shadow.camera.top = 3; key.shadow.camera.bottom = -0.5;
-key.shadow.bias = -0.0012; key.shadow.radius = 3;
-scene.add(key);
-scene.add(new THREE.DirectionalLight(0x9fc4ff, 0.55).translateX(-3).translateY(2).translateZ(-1.5));
-const rim = new THREE.DirectionalLight(0xffffff, 1.1); rim.position.set(-1.5, 2.2, -3); scene.add(rim);
-scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x20242c, 0.5));
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.dampingFactor = 0.07;
-controls.target.set(0, H * 0.52, 0);
-controls.minDistance = 1.2; controls.maxDistance = 7;
-controls.minPolarAngle = 0.25; controls.maxPolarAngle = Math.PI/2 - 0.02;
-controls.autoRotateSpeed = 2.2;
-
-// ---------- материалы ----------
-const skinMat = new THREE.MeshStandardMaterial({ color:M.color.skin, roughness:.68, metalness:0 });
-const hairMat = new THREE.MeshStandardMaterial({ color:M.color.hair, roughness:.52, metalness:.06 });
-const eyeMat  = new THREE.MeshStandardMaterial({ color:0x231a14, roughness:.25 });
-function cloth(hex, rough=0.82, metal=0){
-  return new THREE.MeshStandardMaterial({ color:hex, roughness:rough, metalness:metal });
-}
-
-const person = new THREE.Group(); scene.add(person);
-const bodyGrp = new THREE.Group(); person.add(bodyGrp);
-const wearGrp = new THREE.Group(); person.add(wearGrp);
-
-function add(group, geo, mat, pos, rot){
-  const m = new THREE.Mesh(geo, mat);
-  m.castShadow = true; m.receiveShadow = true;
-  if (pos) m.position.set(...pos);
-  if (rot) m.rotation.set(...rot);
-  group.add(m); return m;
-}
-
-// ---------- геометрия тела ----------
-// Все уровни — от макушки вниз (M.level), переведены в высоту над полом через yOf.
-const torsoTopY = yOf(0.155);                 // основание шеи
-const torsoBotY = yOf(L.crotch);              // пах
-const torsoH = torsoTopY - torsoBotY;
-
-// ⚠️ Крепление рук считается ОТ ПОЛУШИРИНЫ ТОРСА, а не задаётся отдельно.
-// Именно рассогласование этих двух чисел утопило руки внутрь корпуса в первой
-// версии. Теперь рука садится у самой кромки плеча и всегда снаружи.
-// Рука садится ВПЛОТНУЮ к кромке торса на уровне верха груди. Тогда полный
-// размах плеч собирается сам: торс (0,096H) + радиус руки (0,029H) с каждой
-// стороны = 0,250H, ровно биакромиальная ширина. Задавать размах отдельным
-// числом нельзя — именно рассогласование двух чисел и утопило руки в корпус.
-const ARM_R0 = 0.0290 * H;
-const shoulderX = M.width.chest / 2 * H * 1.03;
-const shoulderY = yOf(0.200);
-const ARM_LEN = H * 0.355;                    // плечо → запястье
-const ARM_TILT = 0.20;                        // A-поза как на исходном кадре
-
-const legTopY = torsoBotY + H * 0.012;
-const ankleY = yOf(L.ankle);
-const legLen = legTopY - ankleY;
-const legX = H * 0.055;
-
-function buildBody(){
-  bodyGrp.clear();
-  const tp = torsoProfile(H);
-
-  add(bodyGrp, limb(tp, torsoH, 56, 32), skinMat, [0,(torsoTopY+torsoBotY)/2,0]);
-  const [sx,sz] = tp(0), [hx,hz] = tp(1);
-  add(bodyGrp, cap(sx, sz, H*0.045, true), skinMat, [0, torsoTopY, 0]);
-  // Низ торса — приплюснутый купол. Полная полусфера радиуса бедра давала
-  // вываливающийся живот: это читалось как пузо, а не как таз.
-  add(bodyGrp, cap(hx*0.98, hz*0.98, H*0.030, false), skinMat, [0, torsoBotY, 0]);
-
-  // шея + голова
-  add(bodyGrp, limb(()=>[M.width.neck/2*H, M.width.neck/2*H*0.92], H*0.070, 16, 22),
-      skinMat, [0, torsoTopY + H*0.030, 0]);
-  const headR = M.width.head/2 * H;
-  const headY = yOf(0.133) + headR*0.92;
-  const head = add(bodyGrp, new THREE.SphereGeometry(headR, 44, 34), skinMat, [0, headY, 0]);
-  head.scale.set(0.93, 1.18, 1.02);
-  const hair = add(bodyGrp, new THREE.SphereGeometry(headR*1.04, 40, 32, 0, Math.PI*2, 0, Math.PI*0.60),
-                   hairMat, [0, headY + headR*0.09, -headR*0.03]);
-  hair.scale.set(0.96, 1.16, 1.04);
-
-  // руки
-  const ap = armProfile(H);
-  for (const s of [-1,1]) {
-    const arm = new THREE.Group();
-    arm.position.set(s*shoulderX, shoulderY, 0);
-    arm.rotation.z = s*ARM_TILT;   // знак: + разводит руку НАРУЖУ (см. комментарий у ARM_TILT)
-    add(arm, limb(ap, ARM_LEN, 44, 24).translate(0,-ARM_LEN/2,0), skinMat);
-    add(arm, cap(ARM_R0, ARM_R0*0.90, ARM_R0*1.05, true), skinMat, [0,0,0]);
-    const [wx,wz] = ap(1);
-    const hand = add(arm, new THREE.SphereGeometry(1, 22, 16), skinMat, [0, -ARM_LEN - H*0.035, 0]);
-    hand.scale.set(wx*1.25, H*0.047, wz*2.0);
-    bodyGrp.add(arm);
+// Кадры лежат по углам. Их может быть НЕ полный круг (генерация идёт пачками),
+// поэтому вьюер работает с тем, что реально есть: ищет ближайшие снятые углы
+// слева и справа и смешивает их. Так один готовый ракурс уже крутится, а
+// каждый новый кадр просто делает оборот плавнее — переписывать ничего не надо.
+function nearest(frames, a){
+  const keys = Object.keys(frames).map(Number).sort((x,y)=>x-y);
+  if (!keys.length) return null;
+  if (keys.length === 1) return {lo:keys[0], hi:keys[0], t:0};
+  let lo = keys[keys.length-1], hi = keys[0];
+  for (let i=0;i<keys.length;i++){
+    if (keys[i] <= a) lo = keys[i];
   }
-
-  // ноги
-  const lp = legProfile(H);
-  for (const s of [-1,1]) {
-    const leg = new THREE.Group();
-    leg.position.set(s*legX, legTopY, 0);
-    leg.rotation.z = s*0.016;
-    add(leg, limb(lp, legLen, 48, 26).translate(0,-legLen/2,0), skinMat);
-    const [tx,tz] = lp(0);
-    add(leg, cap(tx, tz, H*0.030, true), skinMat, [0,0,0]);
-    bodyGrp.add(leg);
+  for (let i=keys.length-1;i>=0;i--){
+    if (keys[i] >= a) hi = keys[i];
   }
+  if (lo === hi) return {lo, hi, t:0};
+  let span = hi - lo; if (span < 0) span += 360;
+  let off = a - lo;   if (off < 0) off += 360;
+  return {lo, hi, t: span ? off/span : 0};
 }
 
-// ---------- одежда ----------
-// Каждая вещь строится из ТЕХ ЖЕ профилей тела с припуском (pad), поэтому
-// садится по фигуре. Меняется цвет и крой (где начинается и где заканчивается).
-// Уровень тела (доля от макушки) -> параметр t вдоль торса. Нужен, чтобы кроить
-// одежду в человеческих терминах («подол на уровне бедра»), а не угадывать t.
-const tAt = (level) => (level - 0.155) / (L.crotch - 0.155);
-
-function makeTop(cfg){
-  const g = new THREE.Group();
-  const mat = cloth(cfg.color, cfg.rough ?? 0.85, cfg.metal ?? 0);
-  const pad = cfg.pad ?? H*0.009;
-  const t0 = cfg.t0 ?? 0.02, t1 = Math.min(1, cfg.t1 ?? 0.88);
-  const yTop = torsoTopY - torsoH*t0, yBot = torsoTopY - torsoH*t1;
-  const base = torsoProfile(H, pad);
-  const prof = (t) => base(t0 + (t1-t0)*t);
-  add(g, limb(prof, yTop-yBot, 52, 30), mat, [0,(yTop+yBot)/2,0]);
-  const [ax,az] = prof(0), [bx,bz] = prof(1);
-  add(g, new THREE.TorusGeometry((ax+az)/2*0.88, pad*0.75, 10, 40).rotateX(Math.PI/2), mat, [0,yTop,0]);
-  add(g, new THREE.TorusGeometry((bx+bz)/2*0.99, pad*0.55, 10, 40).rotateX(Math.PI/2), mat, [0,yBot,0]);
-
-  // Полы ниже паха — у пальто и пуховика. Без этого «длинное пальто» кончалось
-  // ровно там же, где футболка, и отличить их было нельзя.
-  if (cfg.skirt > 0){
-    const len = legLen*cfg.skirt;
-    const r0 = (bx+bz)/2;
-    add(g, limb((t)=>{ const r = r0*(1 + 0.10*t); return [r, r*0.92]; }, len, 24, 30),
-        mat, [0, yBot - len/2, 0]);
-  }
-
-  if (cfg.sleeve > 0) {
-    const ap = armProfile(H, pad*0.95);
-    for (const s of [-1,1]) {
-      const arm = new THREE.Group();
-      arm.position.set(s*shoulderX, shoulderY, 0);
-      arm.rotation.z = s*ARM_TILT;   // знак: + разводит руку НАРУЖУ (см. комментарий у ARM_TILT)
-      const len = ARM_LEN*cfg.sleeve;
-      add(arm, limb((t)=>ap(t*cfg.sleeve), len, 34, 22).translate(0,-len/2,0), mat);
-      add(arm, cap(ARM_R0+pad, (ARM_R0+pad)*0.90, (ARM_R0+pad)*1.05, true), mat, [0,0,0]);
-      const [ex,ez] = ap(cfg.sleeve);
-      add(arm, new THREE.TorusGeometry((ex+ez)/2, pad*0.95, 8, 26).rotateX(Math.PI/2), mat, [0,-len,0]);
-      g.add(arm);
-    }
-  }
-  return g;
+function render(){
+  if (!outfit) return;
+  const n = nearest(outfit.frames, ((angle%360)+360)%360);
+  if (!n) return;
+  lA.style.backgroundImage = `url("${outfit.frames[n.lo]}")`;
+  lB.style.backgroundImage = `url("${outfit.frames[n.hi]}")`;
+  lB.style.opacity = n.t;
+  lA.style.opacity = 1;
+  degEl.textContent = Math.round(((angle%360)+360)%360) + '°';
+  rng.value = Math.round(((angle%360)+360)%360);
 }
 
-function makeBottom(cfg){
-  const g = new THREE.Group();
-  const mat = cloth(cfg.color, cfg.rough ?? 0.88, cfg.metal ?? 0);
-  const pad = cfg.pad ?? H*0.010;
-  // Пояс: от чуть ниже талии до паха — в терминах уровней тела, не «на глаз».
-  const tTop = tAt(0.415);   // ниже подола верха: одежда должна наслаиваться как в жизни
-  const yTop = torsoTopY - torsoH*tTop;
-  // Пояс опускается НИЖЕ паха: иначе между ним и штанинами зияла щель, и в ней
-  // просвечивал купол таза — это читалось как голый живот под ремнём.
-  const yBot = torsoBotY - H*0.030;
-  const tb = torsoProfile(H, pad);
-  add(g, limb((t)=>tb(Math.min(1, tTop + (1.06-tTop)*t)), yTop - yBot, 26, 30),
-      mat, [0, (yTop+yBot)/2, 0]);
+function setAngle(a){ angle = ((a%360)+360)%360; render(); }
 
-  const frac = cfg.len ?? 1.0;        // 1 — до щиколотки, 0.46 — шорты
-  const wide = cfg.wide ?? 1.0;
-  const lp = legProfile(H, pad);
-  for (const s of [-1,1]) {
-    const leg = new THREE.Group();
-    leg.position.set(s*legX, legTopY + H*0.004, 0);
-    leg.rotation.z = s*0.016;
-    const len = legLen*frac;
-    add(leg, limb((t)=>{
-      const [rx,rz] = lp(t*frac);
-      const k = 1 + (wide-1)*t;
-      return [rx*k, rz*k];
-    }, len, 40, 26).translate(0,-len/2,0), mat);
-    const [ex,ez] = lp(frac);
-    add(leg, new THREE.TorusGeometry((ex+ez)/2*wide, pad*0.9, 8, 30).rotateX(Math.PI/2), mat, [0,-len,0]);
-    g.add(leg);
-  }
-  return g;
+// --- перетаскивание: горизонталь -> угол ---
+let px = 0, vel = 0, last = 0;
+function down(x){ dragging = true; px = x; vel = 0; spinning = false; spinBtn.classList.remove('on');
+                  stage.classList.add('grabbing'); hideHint(); }
+function move(x){
+  if (!dragging) return;
+  const dx = x - px; px = x;
+  const k = 360 / Math.max(320, stage.clientWidth * 0.9);  // полный оборот ≈ ширина сцены
+  vel = dx * k; setAngle(angle + vel);
 }
+function up(){ dragging = false; stage.classList.remove('grabbing'); last = performance.now(); }
 
-function makeShoes(cfg){
-  const g = new THREE.Group();
-  const mat = cloth(cfg.color, cfg.rough ?? 0.7, cfg.metal ?? 0);
-  const sole = cloth(cfg.sole ?? 0xf2f2f4, 0.9);
-  for (const s of [-1,1]) {
-    const f = new THREE.Group();
-    f.position.set(s*legX, 0, 0);
-    const up = add(f, new THREE.SphereGeometry(1, 26, 18), mat, [0, H*0.030, H*0.016]);
-    up.scale.set(H*0.038, H*0.030, H*0.072);
-    const bk = add(f, new THREE.SphereGeometry(1, 22, 16), mat, [0, H*0.032, -H*0.022]);
-    bk.scale.set(H*0.036, H*0.034, H*0.034);
-    add(f, new THREE.BoxGeometry(H*0.076, H*0.016, H*0.165), sole, [0, H*0.009, H*0.010]);
-    if (cfg.high) {
-      add(f, limb(()=>[H*0.037,H*0.035], H*0.085, 12, 20), mat, [0, H*0.088, -H*0.006]);
-    }
-    g.add(f);
-  }
-  return g;
-}
+stage.addEventListener('pointerdown', e=>{ stage.setPointerCapture(e.pointerId); down(e.clientX); });
+stage.addEventListener('pointermove', e=> move(e.clientX));
+stage.addEventListener('pointerup',   up);
+stage.addEventListener('pointercancel', up);
+rng.addEventListener('input', ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(+rng.value); });
 
-// ---------- каталог ----------
-const PAL = [0x1d2026,0x2f3a4f,0x3f5e8c,0x6ea8fe,0x8d9aad,0xd8dbe2,0xf2f3f5,
-             0x5a3f2e,0x8c5a3c,0xc08a4e,0x7a1f2b,0xb33a3a,0x2f5d3f,0x4f7a4a,0x6b4f8a,0x111214];
+let hintTimer = setTimeout(hideHint, 6000);
+function hideHint(){ const h=document.getElementById('hint'); if(h) h.style.opacity=0; }
 
-const CATALOG = {
-  top: [
-    { id:'tee',    name:'Футболка',         desc:'хлопок, прямой крой',  color:0xd8dbe2, build:c=>makeTop({color:c, sleeve:0.33, t1:0.93}) },
-    { id:'long',   name:'Лонгслив',         desc:'облегающий',           color:0x2f3a4f, build:c=>makeTop({color:c, sleeve:0.98, t1:0.94, pad:H*0.007}) },
-    { id:'polo',   name:'Поло',             desc:'воротник, пике',       color:0x3f5e8c, build:c=>makeTop({color:c, sleeve:0.30, t1:0.92}) },
-    { id:'shirt',  name:'Рубашка',          desc:'свободная, навыпуск',  color:0xf2f3f5, build:c=>makeTop({color:c, sleeve:0.95, t1:0.97, pad:H*0.014, rough:0.74}) },
-    { id:'hoodie', name:'Худи',             desc:'плотный футер',        color:0x8d9aad, build:c=>makeTop({color:c, sleeve:1.0, t1:0.97, pad:H*0.020, rough:0.93}) },
-    { id:'tank',   name:'Майка',            desc:'без рукавов',          color:0x111214, build:c=>makeTop({color:c, sleeve:0,    t1:0.92, pad:H*0.006}) },
-    { id:'knit',   name:'Свитер',           desc:'крупная вязка',        color:0x5a3f2e, build:c=>makeTop({color:c, sleeve:1.0, t1:0.96, pad:H*0.024, rough:0.97}) },
-    { id:'none',   name:'Без верха',        desc:'показать фигуру',      color:0x000000, build:()=>new THREE.Group() },
-  ],
-  bottom: [
-    { id:'jeans',  name:'Джинсы',           desc:'прямые',               color:0x2f3a4f, build:c=>makeBottom({color:c, wide:1.18, rough:0.92}) },
-    { id:'chino',  name:'Чиносы',           desc:'зауженные',            color:0x8c7a5c, build:c=>makeBottom({color:c, wide:1.02}) },
-    { id:'jogger', name:'Джоггеры',         desc:'манжет снизу',         color:0x1d2026, build:c=>makeBottom({color:c, wide:1.25, len:0.95, rough:0.95}) },
-    { id:'suit',   name:'Брюки костюм',     desc:'со стрелкой',          color:0x111214, build:c=>makeBottom({color:c, wide:1.12, rough:0.66}) },
-    { id:'shorts', name:'Шорты',            desc:'до колена',            color:0x4f7a4a, build:c=>makeBottom({color:c, wide:1.35, len:0.46}) },
-    { id:'tights', name:'Лосины',           desc:'как на исходном кадре',color:0x6a686b, build:c=>makeBottom({color:c, wide:1.0, pad:H*0.005}) },
-  ],
-  shoes: [
-    { id:'sneak',  name:'Кроссовки',        desc:'белая подошва',        color:0x7a787a, build:c=>makeShoes({color:c, sole:0xf2f3f5}) },
-    { id:'runner', name:'Беговые',          desc:'яркие',                color:0x3f5e8c, build:c=>makeShoes({color:c, sole:0xe8eaee}) },
-    { id:'boot',   name:'Ботинки',          desc:'высокие',              color:0x5a3f2e, build:c=>makeShoes({color:c, sole:0x2a2522, high:true}) },
-    { id:'dress',  name:'Туфли',            desc:'гладкая кожа',         color:0x141518, build:c=>makeShoes({color:c, sole:0x141518, rough:0.32}) },
-    { id:'barefoot', name:'Босиком',        desc:'без обуви',            color:0x000000, build:()=>new THREE.Group() },
-  ],
-  outer: [
-    { id:'nojack', name:'Без верхней',      desc:'',                     color:0x000000, build:()=>new THREE.Group() },
-    { id:'bomber', name:'Бомбер',           desc:'короткий',             color:0x2f3a4f, build:c=>makeTop({color:c, sleeve:1.0, t0:0.02, t1:0.90, pad:H*0.030, rough:0.70}) },
-    { id:'coat',   name:'Пальто',           desc:'длинное, ниже колена', color:0x3a3a3f, build:c=>makeTop({color:c, sleeve:1.0, t0:0.01, t1:1.0,  skirt:0.46, pad:H*0.034, rough:0.88}) },
-    { id:'puffer', name:'Пуховик',          desc:'объёмный',             color:0x111214, build:c=>makeTop({color:c, sleeve:1.0, t0:0.01, t1:1.0,  skirt:0.16, pad:H*0.046, rough:0.60, metal:0.05}) },
-    { id:'blazer', name:'Пиджак',           desc:'приталенный',          color:0x1d2026, build:c=>makeTop({color:c, sleeve:0.98, t0:0.02, t1:0.97, pad:H*0.026, rough:0.62}) },
-  ],
-};
-
-const worn = {};           // категория -> { item, color, group }
-function wear(cat, item, color){
-  if (worn[cat]?.group) wearGrp.remove(worn[cat].group);
-  const col = color ?? item.color;
-  const grp = item.build(col);
-  grp.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
-  wearGrp.add(grp);
-  worn[cat] = { item, color: col, group: grp };
-}
-
-// ---------- интерфейс ----------
-let activeCat = 'top';
-const listEl = document.getElementById('list');
-
-function renderList(){
-  const items = CATALOG[activeCat];
-  listEl.innerHTML = '';
-  const s1 = document.createElement('div'); s1.className='sect'; s1.textContent='Модель';
-  listEl.appendChild(s1);
-  for (const it of items){
-    const d = document.createElement('div');
-    d.className = 'card' + (worn[activeCat]?.item.id === it.id ? ' on' : '');
-    const sw = document.createElement('div'); sw.className='sw';
-    sw.style.background = it.id.startsWith('no') || it.id==='barefoot'
-      ? 'repeating-linear-gradient(45deg,#2a2f3a 0 6px,#20242c 6px 12px)'
-      : '#'+it.color.toString(16).padStart(6,'0');
-    const tx = document.createElement('div');
-    tx.innerHTML = `<div class="nm">${it.name}</div><div class="ds">${it.desc}</div>`;
-    d.append(sw, tx);
-    d.onclick = ()=>{ wear(activeCat, it, worn[activeCat]?.item.id===it.id ? worn[activeCat].color : undefined); renderList(); };
-    listEl.appendChild(d);
-  }
-  const cur = worn[activeCat];
-  if (cur && cur.item.build.length > 0){
-    const s2 = document.createElement('div'); s2.className='sect'; s2.textContent='Цвет';
-    listEl.appendChild(s2);
-    const wrap = document.createElement('div'); wrap.id='colors';
-    for (const c of PAL){
-      const b = document.createElement('div');
-      b.className = 'col' + (cur.color===c ? ' on':'');
-      b.style.background = '#'+c.toString(16).padStart(6,'0');
-      b.onclick = ()=>{ wear(activeCat, cur.item, c); renderList(); };
-      wrap.appendChild(b);
-    }
-    listEl.appendChild(wrap);
-  }
-}
-document.querySelectorAll('.tab').forEach(t=>{
-  t.onclick = ()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-    t.classList.add('on'); activeCat = t.dataset.c; renderList();
-  };
-});
-
-// ракурсы
-function flyTo(az){
-  const d = camera.position.distanceTo(controls.target);
-  const p = controls.target.clone();
-  camera.position.set(p.x + Math.sin(az)*d, camera.position.y, p.z + Math.cos(az)*d);
-  controls.update();
-}
-document.getElementById('front').onclick  = ()=>flyTo(0);
-document.getElementById('side90').onclick = ()=>flyTo(Math.PI/2);
-document.getElementById('back').onclick   = ()=>flyTo(Math.PI);
 const spinBtn = document.getElementById('spin');
-spinBtn.onclick = ()=>{ controls.autoRotate = !controls.autoRotate; spinBtn.classList.toggle('on', controls.autoRotate); };
-document.getElementById('bgBtn').onclick = ()=>{ bgIdx = (bgIdx+1)%BACKDROPS.length; applyBackdrop(); };
+spinBtn.onclick = ()=>{ spinning = !spinning; spinBtn.classList.toggle('on', spinning); };
+document.getElementById('front').onclick = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(0); };
+document.getElementById('prof').onclick  = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(90); };
+document.getElementById('back').onclick  = ()=>{ spinning=false; spinBtn.classList.remove('on'); setAngle(180); };
 document.getElementById('shot').onclick = ()=>{
-  renderer.render(scene, camera);
+  const n = nearest(outfit.frames, angle);
   const a = document.createElement('a');
-  a.download = 'primerochnaya.png';
-  a.href = renderer.domElement.toDataURL('image/png');
+  a.href = outfit.frames[n.t > 0.5 ? n.hi : n.lo];
+  a.download = `${outfit.id}_${Math.round(angle)}.png`;
   a.click();
 };
 
-// загрузка настоящей модели .glb
-const drop = document.getElementById('drop');
-addEventListener('dragover', e=>{ e.preventDefault(); drop.classList.add('on'); });
-addEventListener('dragleave', e=>{ if(e.relatedTarget===null) drop.classList.remove('on'); });
-addEventListener('drop', async e=>{
-  e.preventDefault(); drop.classList.remove('on');
-  const f = [...e.dataTransfer.files].find(f=>/\.(glb|gltf)$/i.test(f.name));
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  new GLTFLoader().load(url, (g)=>{
-    bodyGrp.clear(); wearGrp.clear();
-    const o = g.scene;
-    const box = new THREE.Box3().setFromObject(o);
-    const size = box.getSize(new THREE.Vector3());
-    const k = H / (size.y || 1);
-    o.scale.setScalar(k);
-    const b2 = new THREE.Box3().setFromObject(o);
-    o.position.y -= b2.min.y;
-    o.position.x -= (b2.max.x+b2.min.x)/2;
-    o.position.z -= (b2.max.z+b2.min.z)/2;
-    o.traverse(m=>{ if(m.isMesh){ m.castShadow = true; m.receiveShadow = true; } });
-    bodyGrp.add(o);
-    document.getElementById('hint').textContent = 'Загружена ваша модель: ' + f.name;
-  }, undefined, ()=>{ document.getElementById('hint').textContent = 'Не удалось прочитать файл'; });
-});
-
-// эталонный кадр в панели
-document.getElementById('ref').src = 'assets/reference.jpg';
-
-// ---------- запуск ----------
-buildBody();
-applyBackdrop();
-wear('top',    CATALOG.top.find(i=>i.id==='tee'));
-wear('bottom', CATALOG.bottom.find(i=>i.id==='jeans'));
-wear('shoes',  CATALOG.shoes.find(i=>i.id==='sneak'));
-wear('outer',  CATALOG.outer[0]);
-renderList();
-document.getElementById('load').remove();
-
-function resize(){
-  const w = stage.clientWidth, h = stage.clientHeight;
-  renderer.setSize(w,h,false);
-  camera.aspect = w/h; camera.updateProjectionMatrix();
-}
-addEventListener('resize', resize); resize();
-
-(function loop(){
+function loop(ts){
   requestAnimationFrame(loop);
-  controls.update();
-  renderer.render(scene, camera);
-})();
+  if (spinning && !dragging) setAngle(angle + 0.45);
+  else if (!dragging && Math.abs(vel) > 0.05){      // инерция после броска
+    vel *= 0.94; setAngle(angle + vel);
+  }
+}
+requestAnimationFrame(loop);
+
+// --- каталог ---
+function pick(o){
+  if (!o.ready) return;
+  outfit = o;
+  // Предзагрузка: без неё первый оборот «мигает» белым на каждом новом кадре.
+  for (const u of Object.values(o.frames)) { const i = new Image(); i.src = u; }
+  render(); draw();
+}
+
+function draw(){
+  listEl.innerHTML = '';
+  const s = document.createElement('div'); s.className='sect'; s.textContent='Образы';
+  listEl.appendChild(s);
+  for (const o of DATA.outfits){
+    const d = document.createElement('div');
+    d.className = 'card' + (outfit && outfit.id===o.id ? ' on':'') + (o.ready?'':' wip');
+    const th = document.createElement('div'); th.className='th';
+    const first = Object.values(o.frames)[0];
+    if (first) th.style.backgroundImage = `url("${first}")`;
+    const tx = document.createElement('div');
+    const cnt = Object.keys(o.frames).length;
+    tx.innerHTML = `<div class="nm">${o.name}</div><div class="ds">${
+      o.ready ? o.desc + ' · ' + cnt + ' ракурс(ов)' : 'готовлю…'}</div>`;
+    d.append(th, tx);
+    d.onclick = ()=>pick(o);
+    listEl.appendChild(d);
+  }
+}
+
+fetch('assets/outfits.json?v=' + Date.now())
+  .then(r=>r.json())
+  .then(j=>{
+    DATA = j;
+    footEl.textContent = j.note || '';
+    // Серый сцены берём ИЗ КАДРОВ: иначе по бокам видно шов между подложкой
+    // страницы и подложкой снимка — два почти одинаковых, но разных серых.
+    if (j.bg) document.getElementById('stage').style.background = j.bg;
+    const ready = j.outfits.filter(o=>o.ready);
+    if (!ready.length){ document.getElementById('load').textContent = 'Кадры ещё готовятся'; return; }
+    pick(ready[0]);
+    document.getElementById('load').remove();
+  })
+  .catch(()=>{ document.getElementById('load').textContent = 'Не удалось загрузить каталог'; });
 </script>
 </body>
 </html>

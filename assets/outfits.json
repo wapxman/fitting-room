@@ -1,0 +1,22 @@
+{
+ "note": "Кадры сняты по вашему фото и выровнены по росту и линии пола.",
+ "outfits": [
+  {
+   "id": "tee-jeans",
+   "name": "Футболка и джинсы",
+   "desc": "белая футболка, тёмные джинсы, белые кеды",
+   "frames": {
+    "0": "frames_aligned/a000.png",
+    "45": "frames_aligned/a045.png",
+    "90": "frames_aligned/a090.png",
+    "135": "frames_aligned/a135.png",
+    "180": "frames_aligned/a180.png",
+    "225": "frames_aligned/a225.png",
+    "270": "frames_aligned/a270.png",
+    "315": "frames_aligned/a315.png"
+   },
+   "ready": true
+  }
+ ],
+ "bg": "rgb(121,120,122)"
+}

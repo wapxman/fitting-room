@@ -1,0 +1,14 @@
+[
+ {
+  "name": "a000",
+  "prompt": "Full-body studio photograph of the SAME man as in the attached reference image — identical face, hairstyle, skin tone and body proportions. He wears a plain white cotton t-shirt, dark indigo straight-leg jeans and white leather sneakers. Relaxed A-pose: standing straight, arms hanging slightly away from the body, hands open. Seamless mid-grey studio backdrop (#7e7e7e), soft even studio lighting, no harsh shadows. Camera at chest height, FULL BODY visible from the top of the head to the soles of the shoes, figure centred and filling the frame height. Photorealistic, sharp, vertical 3:4.\nCAMERA ANGLE: straight-on FRONT view (0 degrees), he faces the camera directly"
+ },
+ {
+  "name": "a090",
+  "prompt": "Full-body studio photograph of the SAME man as in the attached reference image — identical face, hairstyle, skin tone and body proportions. He wears a plain white cotton t-shirt, dark indigo straight-leg jeans and white leather sneakers. Relaxed A-pose: standing straight, arms hanging slightly away from the body, hands open. Seamless mid-grey studio backdrop (#7e7e7e), soft even studio lighting, no harsh shadows. Camera at chest height, FULL BODY visible from the top of the head to the soles of the shoes, figure centred and filling the frame height. Photorealistic, sharp, vertical 3:4.\nCAMERA ANGLE: exact RIGHT-SIDE PROFILE (90 degrees), body turned so we see him from the side, face in profile"
+ },
+ {
+  "name": "a180",
+  "prompt": "Full-body studio photograph of the SAME man as in the attached reference image — identical face, hairstyle, skin tone and body proportions. He wears a plain white cotton t-shirt, dark indigo straight-leg jeans and white leather sneakers. Relaxed A-pose: standing straight, arms hanging slightly away from the body, hands open. Seamless mid-grey studio backdrop (#7e7e7e), soft even studio lighting, no harsh shadows. Camera at chest height, FULL BODY visible from the top of the head to the soles of the shoes, figure centred and filling the frame height. Photorealistic, sharp, vertical 3:4.\nCAMERA ANGLE: straight-on BACK view (180 degrees), we see his back, face not visible at all"
+ }
+]
